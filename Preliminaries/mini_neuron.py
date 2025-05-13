@@ -47,9 +47,9 @@ def mse_loss(ys, ypred):
     return np.mean((ys - ypred) ** 2)
 
 lr = 0.01
-xs = np.random.random((4, 3))
+xs = np.random.random((5, 3))
 mlp = MLP(3, [4,4,1])
-ys = np.array([-1,-1,1,1])
+ys = np.array([-1,-1,1,1, 1])
 ypred = [mlp(x) for x in xs]
 loss  = mse_loss(ys, ypred)
 print(loss)
@@ -57,13 +57,12 @@ print(loss)
 # Backprop
 loss.backward()
 
-# One step of gradient descent
-for _ in range(10):
+for _ in range(1000):
     for p in mlp.parameters():
         p.data -= lr * p.grad
-        
     ypred = [mlp(x) for x in xs]
     loss  = mse_loss(ys, ypred)
+    loss.backward()
 
 print("Final loss")
 print(loss)
