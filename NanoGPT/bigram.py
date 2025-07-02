@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import sys
+import os
 
 # Ensure we use CUDA if it's available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if not torch.cuda.is_available() else "cpu")
 torch.cuda.empty_cache()
 
 # Read the input text
@@ -25,7 +26,8 @@ test_data = dataset[split:]
 
 block_size = 8
 batch_size = 4
-max_iter_size = 10000
+n_embd = 3
+max_iter_size = 1000
 log_steps = 1000
 eval_iters = 200
 eval_interval = 200
@@ -56,10 +58,16 @@ def estimate_loss():
 class BigramLanguageModel(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()
-        self.emb = nn.Embedding(vocab_size, vocab_size).to(device)
+        self.emb = nn.Embedding(vocab_size, n_embd).to(device)
+        self.position_embedding = nn.Embedding(block_size, n_embd).to(device)
+        self.lm_head = nn.Linear(n_embd, vocab_size).to(device)
         
     def forward(self, idx, targets=None):
-        logits = self.emb(idx)
+        B, T = idx.shape
+        token_embd = self.emb(idx) # B, T, n_embed
+        pos_embd = self.position_embedding(torch.arange(T, device=device)) # T, n_embed
+        x = token_embd + pos_embd # B, T, n_embed
+        logits = self.lm_head(x) # B, T, vocab_size  
         if targets is None:
             return logits, None
         else:
@@ -75,6 +83,7 @@ class BigramLanguageModel(nn.Module):
             logits = logits[:, -1, :]
             sft = F.softmax(logits, dim=1)
             idx_next = torch.multinomial(sft, 1)
+            print(idx_next)
             idx = torch.cat((idx, idx_next), dim=1)
         return idx
 
