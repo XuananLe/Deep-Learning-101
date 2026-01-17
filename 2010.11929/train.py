@@ -1,12 +1,11 @@
 import warnings
 warnings.filterwarnings("ignore")
 import torch
-from einops import rearrange
+from einops import rearrange, repeat
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from einops import repeat
 from torch.utils.data import random_split, DataLoader
 import torchvision
 import torchvision.transforms as transforms
